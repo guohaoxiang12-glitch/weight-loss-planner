@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cozy Weight Planner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23F7C8DD'/%3E%3Ccircle cx='16' cy='13' r='6' fill='%23FFF9F2'/%3E%3Cpath d='M10 12h12M11 17c2-2 4-3 5-3s3 1 5 3' stroke='%23C97BA6' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<style>
+/* ===== Kawaii wellness journal theme ===== */
+:root{
+  --cream:#FFF7EE; --card:#FFFDFB; --paper:#FFF9F2;
+  --pink:#F7C8DD; --pinkSoft:#FBE7F0; --pinkDeep:#B85C87;
+  --lav:#DDD0F2; --lavSoft:#F1ECFA;
+  --sage:#BFDCC4; --sageSoft:#EAF4EA;
+  --ink:#5B4654; --ink2:#8A7180; --ink3:#B39AA8;
+  --line:#F3E0EA; --line2:#EFE5F6;
+  --berry:#C97BA6; --gold:#F2C94C; --straw:#F27C7C;
+  --shadow:0 8px 22px rgba(216,158,188,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--cream);color:var(--ink);font-family:"Segoe UI","Quicksand","Verdana",system-ui,-apple-system,sans-serif;line-height:1.55;font-size:15px;background-image:radial-gradient(rgba(247,200,221,.28) 1.2px,transparent 1.2px),radial-gradient(rgba(191,220,196,.35) 1.2px,transparent 1.2px);background-size:26px 26px,26px 26px;background-position:0 0,13px 13px}
+.page{max-width:1060px;margin:0 auto;padding:24px 16px 60px;position:relative}
+.deco{pointer-events:none;position:absolute}
+.deco svg{display:block}
+/* ===== Hero ===== */
+.hero{position:relative;background:linear-gradient(135deg,#FFF3F7 0%,#F6EEFB 55%,#EFF6F0 100%);border:2px solid var(--line);border-radius:26px;padding:26px 22px 24px;overflow:hidden;margin-top:8px}
+.hero .corner{position:absolute;pointer-events:none;opacity:.85}
+.hero .corner.tl{top:10px;left:12px}
+.hero .corner.tr{top:10px;right:14px;transform:scaleX(-1)}
+.hero .corner.bl{bottom:12px;left:14px;transform:scaleY(-1)}
+.hero .corner.br{bottom:12px;right:14px;transform:scale(-1)}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+.hero .logo{display:flex;align-items:center;gap:9px;font-weight:800;color:var(--berry);letter-spacing:.03em;font-size:14px}
+.hero h1{font-size:clamp(28px,6vw,42px);line-height:1.12;margin:12px 0 8px;color:#6B4A5E;letter-spacing:-.01em}
+.hero p.sub{color:var(--ink2);font-size:15px;max-width:54ch}
+.hero .points{display:grid;grid-template-columns:1fr;gap:9px;margin-top:16px}
+.point{display:flex;align-items:center;gap:10px;background:rgba(255,253,251,.85);border:1.5px solid var(--line);border-radius:14px;padding:10px 13px;font-size:13.5px}
+.point svg{flex:none;color:var(--berry)}
+.mascot-wrap{display:flex;justify-content:center;position:relative}
+.mascot{width:150px;height:150px}
+.sticker{position:absolute;pointer-events:none}
+/* ===== Panels & form ===== */
+.panel{position:relative;background:var(--card);border:2px solid var(--line);border-radius:22px;padding:20px 18px;margin-top:16px;box-shadow:var(--shadow)}
+.panel h2{font-size:19px;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:#6B4A5E}
+.panel h2 svg{color:var(--berry);flex:none}
+.sticker-pos{position:absolute;top:-13px;right:14px;pointer-events:none;z-index:2}
+.fields{display:grid;grid-template-columns:1fr;gap:14px}
+.field label{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px;font-weight:700}
+.field input[type=number],.field select{width:100%;font-size:16px;padding:11px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);outline:none;appearance:none;-webkit-appearance:none;transition:border-color .18s,background .18s}
+.field input[type=number]:focus,.field select:focus{border-color:var(--berry);background:#fff}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{border:1.5px solid var(--line);background:var(--paper);border-radius:14px;padding:11px 0;font-size:15px;color:var(--ink);cursor:pointer;transition:transform .15s,background .15s}
+.seg button:hover{transform:translateY(-1px)}
+.seg button.on{background:var(--pinkSoft);border-color:var(--pink);color:var(--pinkDeep);font-weight:800}
+.btn-main{display:block;width:100%;border:0;border-radius:16px;background:linear-gradient(135deg,#F7C8DD,#E3D5F4);color:#7A3B5C;font-size:16px;font-weight:800;padding:14px;cursor:pointer;margin-top:18px;box-shadow:0 4px 14px rgba(216,158,188,.25);transition:transform .16s,box-shadow .16s}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(216,158,188,.32)}
+.btn-main:active{transform:translateY(0)}
+.btn-ghost{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line2);background:#fff;color:var(--ink2);border-radius:12px;padding:9px 14px;font-size:13.5px;cursor:pointer;transition:transform .15s,border-color .15s}
+.btn-ghost:hover{color:var(--ink);border-color:var(--lav);transform:translateY(-1px)}
+.hint{font-size:12.5px;color:var(--ink3);margin-top:10px;line-height:1.6}
+/* ===== Metric cards ===== */
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.metric{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:13px 14px;overflow:hidden}
+.metric .k{font-size:12.5px;color:var(--ink2);font-weight:700}
+.metric .v{font-size:23px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:#6B4A5E}
+.metric .d{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.metric.hot .v{color:var(--straw)}
+.metric .mini{position:absolute;top:8px;right:8px;pointer-events:none;opacity:.8}
+/* ===== Macro bars ===== */
+.macros{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+.macro .row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px;font-weight:700;color:#6B4A5E}
+.macro .row b{font-variant-numeric:tabular-nums}
+.macro .bar{height:10px;background:#F4E9F0;border-radius:99px;overflow:hidden}
+.macro .bar i{display:block;height:100%;border-radius:99px}
+.bar-pro{background:linear-gradient(90deg,#DDD0F2,#C9B6EC)}
+.bar-fat{background:linear-gradient(90deg,#F9C8CF,#F48FB1)}
+.bar-carb{background:linear-gradient(90deg,#CBE3CE,#9ECBA6)}
+.macro .hint{color:var(--ink3)}
+.macro-total{font-size:12.5px;color:var(--ink2);margin-top:12px;background:var(--lavSoft);border-radius:12px;padding:9px 13px}
+/* ===== Warn ===== */
+.warn{border-radius:14px;padding:12px 14px;font-size:13.5px;margin-top:14px;display:flex;gap:9px;align-items:flex-start;line-height:1.55}
+.warn svg{flex:none;margin-top:2px}
+.warn.danger{background:#FDEBE9;color:#9A4B3F}
+.warn.info{background:var(--sageSoft);color:#4E7A5A}
+/* ===== Chart ===== */
+.chart-box{width:100%;height:330px;margin-top:10px}
+.chart-fallback{display:grid;gap:8px;place-items:center;text-align:center;padding:22px 12px;color:var(--ink2);font-size:14px;border:2px dashed var(--line);border-radius:16px;background:var(--paper)}
+.chart-fallback b{color:var(--berry);font-variant-numeric:tabular-nums}
+.chart-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink2);margin-top:8px}
+.chart-legend span{display:flex;align-items:center;gap:6px}
+.chart-legend i{width:18px;height:4px;border-radius:3px;display:inline-block}
+/* ===== Meal plan ===== */
+.meal-plan{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+.meal{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:start;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--paper);position:relative;overflow:hidden}
+.meal .tag{font-size:13px;font-weight:800;color:var(--pinkDeep);background:var(--pinkSoft);border-radius:10px;padding:6px 0;text-align:center}
+.meal .t{font-size:14px;font-weight:800;color:#6B4A5E}
+.meal .g{font-size:12.5px;color:var(--ink2);margin-top:2px;font-variant-numeric:tabular-nums}
+.meal .p{font-size:13.5px;color:var(--ink);margin-top:6px;line-height:1.5}
+/* ===== Week plan ===== */
+.week{display:grid;grid-template-columns:1fr;gap:9px;margin-top:14px}
+.day{display:grid;grid-template-columns:52px 1fr;gap:12px;border:1.5px solid var(--line);border-radius:16px;padding:11px 14px;align-items:start;background:var(--paper)}
+.day .dow{font-weight:800;color:var(--berry);font-size:14px;padding-top:1px}
+.day .act{font-size:14.5px;font-weight:800;color:#6B4A5E}
+.day .note{font-size:13px;color:var(--ink2);margin-top:2px;line-height:1.5}
+.day.rest{border-style:dashed;background:#F6F9F4}
+/* ===== Check-in ===== */
+.checkin-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:4px}
+.checkin-row input{font-size:16px;padding:12px 13px;border:1.5px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);outline:none;width:100%}
+.checkin-row input:focus{border-color:var(--berry);background:#fff}
+.records{margin-top:14px;display:grid;grid-template-columns:1fr;gap:8px}
+.rec{display:flex;justify-content:space-between;align-items:center;border:1.5px solid var(--line);border-radius:14px;padding:10px 13px;font-size:14px;background:var(--paper)}
+.rec .date{color:var(--ink2)}
+.rec .wt{font-weight:800;font-variant-numeric:tabular-nums;color:#6B4A5E}
+.rec .delta{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.delta.down{color:var(--sage-green,#5E9B6B)}
+.delta.up{color:var(--straw)}
+.delta.flat{color:var(--ink3)}
+.empty{padding:16px;text-align:center;color:var(--ink2);font-size:13.5px;border:2px dashed var(--line);border-radius:14px;background:var(--paper)}
+/* ===== Section titles ===== */
+.section-title{display:flex;align-items:center;gap:9px;font-size:18px;margin:26px 0 4px;color:#6B4A5E}
+.section-title svg{color:var(--berry);flex:none}
+.section-sub{font-size:13px;color:var(--ink3);margin-bottom:12px;line-height:1.55}
+/* ===== Footer ===== */
+.note{font-size:12.5px;color:var(--ink3);margin-top:26px;line-height:1.75;background:var(--card);border:1.5px dashed var(--line);border-radius:16px;padding:14px 16px}
+.note b{color:var(--ink2)}
+.foot-sign{text-align:center;color:var(--ink3);font-size:13px;margin-top:22px}
+/* ===== Focus & motion ===== */
+:focus-visible{outline:3px solid rgba(201,123,166,.55);outline-offset:2px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  .btn-main:hover,.btn-ghost:hover,.seg button:hover{transform:none}
+}
+@media (min-width:768px){
+  .page{padding:32px 26px 70px}
+  .hero{padding:34px 30px 30px}
+  .hero-grid{grid-template-columns:1fr auto;gap:20px}
+  .hero .points{grid-template-columns:repeat(3,1fr)}
+  .fields{grid-template-columns:repeat(2,1fr)}
+  .metrics{grid-template-columns:repeat(4,1fr)}
+  .macros{grid-template-columns:repeat(3,1fr)}
+  .meal-plan{grid-template-columns:repeat(2,1fr)}
+  .week{grid-template-columns:repeat(2,1fr);gap:10px}
+  .records{grid-template-columns:repeat(2,1fr)}
+  .chart-box{height:370px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="flower" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="4" rx="2.6" ry="4"/><ellipse cx="12" cy="20" rx="2.6" ry="4"/><ellipse cx="4" cy="12" rx="4" ry="2.6"/><ellipse cx="20" cy="12" rx="4" ry="2.6"/><circle cx="12" cy="12" r="2.2" fill="#FFFDFB"/></g></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2l2.6 6.7L21 9.4l-5 4.4 1.5 6.9L12 17l-5.5 3.7L8 13.8 3 9.4l6.4-.7z"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21C8 17.6 3.5 14 3.5 9.3A4.8 4.8 0 0 1 8.4 4.4c1.6 0 3 .8 3.6 2 .6-1.2 2-2 3.6-2a4.8 4.8 0 0 1 4.9 4.9C20.5 14 16 17.6 12 21z"/></symbol>
+    <symbol id="sparkle" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/></symbol>
+    <symbol id="strawberry" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3c1.8 2.3 4.2 3.2 5.5 4.6 1.2 1.4 1.8 3 1.5 4.9-.5 3.4-3.2 6-7 8.5-3.8-2.5-6.5-5.1-7-8.5-.3-1.9.3-3.5 1.5-4.9C7.8 6.2 10.2 5.3 12 3z"/><path d="M8 10.5c1.3 1.2 2.6 1.2 4 0M10 14c1.3 1.2 2.7 1.2 4 0" stroke="#FFF" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M12 3l1.2 2M16.5 7.6l1.6-1.4" stroke="#7AA15F" stroke-width="1.4" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="bow" viewBox="0 0 24 24"><path fill="currentColor" d="M12 13.5c-2.6 0-6 1.3-6 4.5v2h12v-2c0-3.2-3.4-4.5-6-4.5zM5 6c0 1.7 3.1 3 7 3 .6 0 1.2 0 1.7-.1C12.6 7 12 4.6 12 3c-3.9 0-7 1.3-7 3zm14 0c0 1.7-3.1 3-7 3-.6 0-1.2 0-1.7-.1 1.1-1.9 1.7-4.3 1.7-5.9 3.9 0 7 1.3 7 3z" opacity=".55"/><circle cx="12" cy="18" r="1.6" fill="#FFFDFB"/></symbol>
+    <symbol id="ribbon" viewBox="0 0 40 14"><path fill="currentColor" d="M0 0h34v9H0z" opacity=".5"/><path d="M34 0v9l-4.5-2.6L25 9V0z" fill="currentColor" opacity=".8"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+
+  <!-- ===== Hero ===== -->
+  <header class="hero">
+    <div class="corner tl"><svg width="34" height="34"><use href="#flower" xlink:href="#flower" color="#F2B8C6"/></svg></div>
+    <div class="corner tr"><svg width="30" height="30"><use href="#sparkle" xlink:href="#sparkle" color="#F2C94C"/></svg></div>
+    <div class="corner bl"><svg width="26" height="26"><use href="#heart" xlink:href="#heart" color="#F48FB1"/></svg></div>
+    <div class="corner br"><svg width="30" height="30"><use href="#star" xlink:href="#star" color="#C9B6EC"/></svg></div>
+    <div class="hero-grid">
+      <div>
+        <div class="logo"><svg width="20" height="20"><use href="#flower" xlink:href="#flower" color="#C97BA6"/></svg> Cozy Weight Planner</div>
+        <h1>Your cozy little weight-loss journal</h1>
+        <p class="sub">Enter your height, weight and activity level to get a personal calorie budget, a weekly meal and workout plan, and a gentle 12-week forecast. Everything stays in your browser.</p>
+        <div class="points">
+          <div class="point"><svg width="17" height="17"><use href="#heart" xlink:href="#heart" color="#F48FB1"/></svg> Estimates based on your body &amp; activity</div>
+          <div class="point"><svg width="17" height="17"><use href="#star" xlink:href="#star" color="#E9C46A"/></svg> A 12-week forecast to keep you on track</div>
+          <div class="point"><svg width="17" height="17"><use href="#sparkle" xlink:href="#sparkle" color="#B79CED"/></svg> Your data never leaves this browser</div>
+        </div>
+      </div>
+      <div class="mascot-wrap">
+        <svg class="mascot" viewBox="0 0 160 160" aria-hidden="true">
+          <defs>
+            <radialGradient id="bgGlow" cx="50%" cy="42%" r="60%"><stop offset="0%" stop-color="#FFF6EC"/><stop offset="100%" stop-color="#FBE7F0"/></radialGradient>
+          </defs>
+          <circle cx="80" cy="80" r="74" fill="url(#bgGlow)"/>
+          <g fill="#F9DCC9" stroke="#E8BE9E" stroke-width="2">
+            <circle cx="42" cy="52" r="13"/><circle cx="118" cy="52" r="13"/>
+            <circle cx="80" cy="86" r="40"/>
+          </g>
+          <circle cx="42" cy="52" r="6" fill="#F2B8C6"/><circle cx="118" cy="52" r="6" fill="#F2B8C6"/>
+          <circle cx="67" cy="80" r="4" fill="#6B4A5E"/><circle cx="93" cy="80" r="4" fill="#6B4A5E"/>
+          <circle cx="66" cy="80" r="1.4" fill="#fff"/><circle cx="92" cy="80" r="1.4" fill="#fff"/>
+          <ellipse cx="56" cy="94" rx="7" ry="4.4" fill="#F7A8C0" opacity=".75"/>
+          <ellipse cx="104" cy="94" rx="7" ry="4.4" fill="#F7A8C0" opacity=".75"/>
+          <path d="M71 96 q9 7 18 0" stroke="#6B4A5E" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <g transform="translate(102 34)"><use href="#flower" xlink:href="#flower" color="#F2B8C6"/></g>
+          <g transform="translate(46 26)"><use href="#sparkle" xlink:href="#sparkle" color="#F2C94C"/></g>
+        </svg>
+        <div class="sticker" style="top:6px;left:-8px"><svg width="26" height="26"><use href="#heart" xlink:href="#heart" color="#F48FB1"/></svg></div>
+        <div class="sticker" style="top:26px;right:-6px"><svg width="22" height="22"><use href="#star" xlink:href="#star" color="#E9C46A"/></svg></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Input ===== -->
+  <section class="panel" id="inputPanel">
+    <div class="sticker-pos"><svg width="30" height="30"><use href="#bow" xlink:href="#bow" color="#C97BA6"/></svg></div>
+    <h2><svg width="18" height="18"><use href="#sparkle" xlink:href="#sparkle" color="#C97BA6"/></svg> Tell me about you</h2>
+    <div class="fields">
+      <div class="field">
+        <label id="genderLabel">Gender</label>
+        <div class="seg" id="genderSeg" role="group" aria-labelledby="genderLabel">
+          <button type="button" data-g="male">Male</button>
+          <button type="button" data-g="female">Female</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="age">Age</label>
+        <input id="age" type="number" min="14" max="90" inputmode="numeric" placeholder="e.g. 28">
+      </div>
+      <div class="field">
+        <label for="height">Height (cm)</label>
+        <input id="height" type="number" min="130" max="230" inputmode="decimal" placeholder="e.g. 170">
+      </div>
+      <div class="field">
+        <label for="weight">Current weight (kg)</label>
+        <input id="weight" type="number" min="30" max="250" inputmode="decimal" placeholder="e.g. 72">
+      </div>
+      <div class="field">
+        <label for="activity">Daily activity level</label>
+        <select id="activity">
+          <option value="1.2">Sedentary (desk job, little exercise)</option>
+          <option value="1.375" selected>Lightly active (exercise 1–3× a week)</option>
+          <option value="1.55">Moderately active (exercise 3–5× a week)</option>
+          <option value="1.725">Very active (exercise 6–7× a week)</option>
+          <option value="1.9">Extremely active (physical job + daily training)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="goal">Weekly weight-loss goal</label>
+        <select id="goal">
+          <option value="0.25">Gentle · about 0.25 kg a week</option>
+          <option value="0.5" selected>Balanced · about 0.5 kg a week</option>
+          <option value="0.75">Steady · about 0.75 kg a week</option>
+          <option value="1">Ambitious · about 1 kg a week (not recommended)</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-main" id="generateBtn">Make my plan</button>
+    <p class="hint">Estimates use the Mifflin-St Jeor formula and are for personal reference only — not medical advice.</p>
+    <div style="margin-top:14px;display:flex;justify-content:flex-end">
+      <button class="btn-ghost" id="resetBtn" type="button"><svg width="15" height="15"><use href="#heart" xlink:href="#heart" color="#F48FB1"/></svg> Start a new plan</button>
+    </div>
+  </section>
+
+  <!-- ===== Results ===== -->
+  <section id="results" hidden>
+
+    <div class="section-title"><svg width="18" height="18"><use href="#heart" xlink:href="#heart" color="#F48FB1"/></svg> Your daily energy budget</div>
+    <div class="metrics" id="metrics"></div>
+    <div id="warns"></div>
+
+    <div class="section-title" style="margin-top:26px"><svg width="18" height="18"><use href="#strawberry" xlink:href="#strawberry" color="#F27C7C"/></svg> Macronutrient split</div>
+    <div class="macros" id="macros"></div>
+
+    <div class="section-title"><svg width="18" height="18"><use href="#star" xlink:href="#star" color="#E9C46A"/></svg> 12-week weight forecast</div>
+    <p class="section-sub">A gentle estimate based on your current calorie deficit. Real results vary — treat this as a guide, not a promise.</p>
+    <div class="panel">
+      <div class="chart-box" id="chart"></div>
+      <div class="chart-legend">
+        <span><i style="background:#C97BA6"></i>Forecast (estimate)</span>
+        <span><i style="background:#F27C7C"></i>Your records</span>
+      </div>
+    </div>
+
+    <div class="section-title"><svg width="18" height="18"><use href="#flower" xlink:href="#flower" color="#F2B8C6"/></svg> Daily meal framework</div>
+    <p class="section-sub">Your calories and macros split across meals, with simple portion guides. Swap foods freely to fit your tastes.</p>
+    <div class="meal-plan" id="mealPlan"></div>
+
+    <div class="section-title"><svg width="18" height="18"><use href="#sparkle" xlink:href="#sparkle" color="#B79CED"/></svg> Weekly workout plan</div>
+    <div class="week" id="weekPlan"></div>
+
+    <div class="section-title"><svg width="18" height="18"><use href="#bow" xlink:href="#bow" color="#C97BA6"/></svg> Weekly check-in</div>
+    <p class="section-sub">Weigh yourself at the same time each week (morning, after the toilet, before eating) and record it below.</p>
+    <div class="panel">
+      <div class="checkin-row">
+        <input id="checkinWt" type="number" min="30" max="250" step="0.1" inputmode="decimal" placeholder="This week's weight (kg)">
+        <button class="btn-main" id="checkinBtn" style="margin-top:0;width:auto;padding:12px 18px">Record</button>
+      </div>
+      <div class="records" id="records"></div>
+    </div>
+
+    <p class="note">
+      <b>Notes &amp; disclaimer:</b> Basal metabolic rate and daily burn are statistical estimates, not measurements — your real numbers vary. A healthy pace is usually 0.25–0.75 kg per week; don't go below about 1200 kcal/day for women or 1500 kcal/day for men. Keep protein around 1.6–2.2 g per kg of body weight to protect muscle. The activity guidance follows the WHO recommendation of 150 minutes of moderate exercise per week. This page is for personal reference only and is not medical advice — if you have a health condition or take long-term medication, please talk to your doctor or a registered dietitian first.
+    </p>
+  </section>
+
+  <div class="foot-sign">Made with <svg width="13" height="13" style="vertical-align:-2px"><use href="#heart" xlink:href="#heart" color="#F48FB1"/></svg> for your wellness journey</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var LS_KEY = "weightPlanV1";
+  var state = load() || { profile:null, startDate:null, records:[] };
+
+  /* ---------- storage with validation ---------- */
+  function validNum(v){ return typeof v === "number" && isFinite(v); }
+  function validateState(obj){
+    if (!obj || typeof obj !== "object") return false;
+    var p = obj.profile;
+    if (p != null){
+      if (typeof p !== "object") return false;
+      if (!["age","height","weight","activity","goal"].every(function(k){ return validNum(p[k]); })) return false;
+      if (p.gender != null && p.gender !== "male" && p.gender !== "female") return false;
+    }
+    if (obj.startDate != null && typeof obj.startDate !== "string") return false;
+    if (obj.records != null){
+      if (!Array.isArray(obj.records)) return false;
+      for (var i=0;i<obj.records.length;i++){
+        var r = obj.records[i];
+        if (!r || typeof r.date !== "string" || !validNum(r.weight)) return false;
+      }
+    }
+    return true;
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return null;
+      var obj = JSON.parse(raw);
+      if (!validateState(obj)) return null;   // corrupted → start clean, never crash
+      return obj;
+    }catch(e){ return null; }
+  }
+  function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+  /* ---------- gender segment ---------- */
+  var gender = "male";
+  var segBtns = document.querySelectorAll("#genderSeg button");
+  segBtns.forEach(function(b){
+    b.addEventListener("click", function(){
+      gender = b.getAttribute("data-g");
+      segBtns.forEach(function(x){ x.classList.toggle("on", x === b); });
+    });
+  });
+  segBtns[0].classList.add("on");
+
+  /* ---------- helpers ---------- */
+  function todayISO(){
+    var t = new Date();
+    return t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,"0") + "-" + String(t.getDate()).padStart(2,"0");
+  }
+  function parseISO(s){ var a = s.split("-"); return new Date(+a[0], +a[1]-1, +a[2]); }
+  function fmt(x){ return Math.round(x * 10) / 10; }
+
+  /* ---------- computation ---------- */
+  function compute(p){
+    var h = p.height / 100;
+    var bmi = p.weight / (h * h);
+    var bmr = p.gender === "male"
+      ? 10*p.weight + 6.25*p.height - 5*p.age + 5
+      : 10*p.weight + 6.25*p.height - 5*p.age - 161;
+    var tdee = bmr * p.activity;
+    var deficit = p.goal * 7700 / 7;
+    var warns = [];
+    if (deficit > 750){ deficit = 750; warns.push({type:"danger", text:"A 1 kg/week goal needs too big a calorie cut, so the app capped it at about 750 kcal/day (≈0.68 kg/week). Losing weight too fast tends to shed muscle and bounce back — a gentler goal is easier to keep."}); }
+    var floor = p.gender === "male" ? 1500 : 1200;
+    var targetCal = tdee - deficit;
+    if (targetCal < floor){ targetCal = floor; warns.push({type:"danger", text:"Your target intake fell below the safe floor (" + (p.gender==="male"?"1500 kcal/day for men":"1200 kcal/day for women") + "), so it was raised to that floor. If your deficit feels too small, slow down the goal or add a little more movement."}); }
+    if (p.age < 18){
+      warns.push({type:"info", text:"You're under 18 — adult BMI categories don't apply directly, and teens have different energy needs while growing. Use this tool as a rough reference only, and check with a doctor or registered dietitian before big changes."});
+    } else if (bmi < 18.5){
+      warns.push({type:"info", text:"Your BMI is below 18.5 (underweight range). Weight loss isn't recommended right now — consider focusing on building muscle or maintaining, with plenty of protein and strength training."});
+    } else if (bmi < 24){
+      warns.push({type:"info", text:"Your BMI is in the normal range (18.5–23.9). A small, gentle loss is fine — pick the 0.25–0.5 kg/week goal."});
+    }
+    var protein = Math.round(p.weight * 1.8);
+    var fat = Math.round(targetCal * 0.25 / 9);
+    var carb = Math.round((targetCal - protein*4 - fat*9) / 4);
+    if (carb < 50){ carb = 50; warns.push({type:"danger", text:"Estimated carbs were very low, so the plan keeps a minimum of 50 g/day. Extremely low carbs can hurt energy and workouts — consider a gentler goal or more activity."}); }
+    return { bmi:bmi, bmr:Math.round(bmr), tdee:Math.round(tdee), deficit:Math.round(deficit),
+             targetCal:Math.round(targetCal), protein:protein, fat:fat, carb:carb, warns:warns };
+  }
+
+  function bmiClass(b, age){
+    if (age < 18) return "Youth — reference only";
+    if (b < 18.5) return "Underweight";
+    if (b < 24) return "Normal";
+    if (b < 28) return "Overweight";
+    return "Obese";
+  }
+  function clampPct(x){ return Math.max(0, Math.min(100, Math.round(x))); }
+
+  /* ---------- chart data (real dates) ---------- */
+  function addDays(d, n){ var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function iso(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+  function shortDate(s){ var a = s.split("-"); return a[1] + "/" + a[2]; }
+
+  function buildChartData(c){
+    var start = state.startDate ? parseISO(state.startDate) : new Date();
+    var cats = [], predMap = {};
+    for (var i = 0; i <= 12; i++){
+      var lab = iso(addDays(start, i*7));
+      cats.push(lab);
+      predMap[lab] = fmt(state.profile.weight - c.deficit * 7 / 7700 * i);
+    }
+    var recMap = {};
+    state.records.forEach(function(r){
+      recMap[r.date] = fmt(r.weight);   // last entry for the same date wins (kept consistent)
+      if (cats.indexOf(r.date) < 0) cats.push(r.date);
+    });
+    cats.sort();
+    return {
+      cats: cats,
+      pred: cats.map(function(x){ return predMap[x] != null ? predMap[x] : null; }),
+      rec: cats.map(function(x){ return recMap[x] != null ? recMap[x] : null; })
+    };
+  }
+
+  /* ---------- chart render with fallback ---------- */
+  var chart = null;
+  function renderChart(c){
+    var el = document.getElementById("chart");
+    var data = buildChartData(c);
+    if (typeof echarts === "undefined"){
+      var endW = fmt(state.profile.weight - c.deficit * 7 / 7700 * 12);
+      el.innerHTML = '<div class="chart-fallback">' +
+        '<svg width="26" height="26"><use href="#star" xlink:href="#star" color="#E9C46A"/></svg>' +
+        'The chart library couldn\'t load (it needs an internet connection).<br>' +
+        'Your forecast: about <b>' + state.profile.weight + ' kg</b> today → about <b>' + endW + ' kg</b> in 12 weeks (estimate).' +
+        '</div>';
+      return;
+    }
+    if (!chart){ chart = echarts.init(el); }
+    chart.setOption({
+      grid:{ left:8, right:14, top:26, bottom:8, containLabel:true },
+      tooltip:{ trigger:"axis", confine:true, backgroundColor:"#FFFDFB", borderColor:"#F3E0EA", textStyle:{ color:"#5B4654", fontSize:12 },
+        formatter:function(ps){
+          var s = ps[0].axisValue + "<br/>";
+          ps.forEach(function(p){
+            if (p.value != null) s += p.marker + p.seriesName + ": " + p.value + " kg<br/>";
+          });
+          s += '<span style="color:#B39AA8">Estimate only — results vary</span>';
+          return s;
+        } },
+      xAxis:{ type:"category", data:data.cats, boundaryGap:false,
+        axisLine:{ lineStyle:{ color:"#E3CFDC" } }, axisTick:{ show:false },
+        axisLabel:{ color:"#B39AA8", fontSize:10.5, formatter:function(v){ return shortDate(v); } } },
+      yAxis:{ type:"value", scale:true,
+        axisLabel:{ color:"#B39AA8", fontSize:11 }, splitLine:{ lineStyle:{ color:"#F4E9F0" } } },
+      series:[
+        { name:"Forecast (estimate)", type:"line", data:data.pred, smooth:false, symbol:"none",
+          lineStyle:{ color:"#C97BA6", width:3 }, itemStyle:{ color:"#C97BA6" } },
+        { name:"Your records", type:"line", data:data.rec, connectNulls:false,
+          symbol:"circle", symbolSize:8, lineStyle:{ color:"#F27C7C", width:2, type:"dashed" },
+          itemStyle:{ color:"#F27C7C" }, z:5 }
+      ]
+    });
+  }
+
+  /* ---------- meals ---------- */
+  function renderMeals(c){
+    var splits = [
+      {name:"Breakfast", pct:0.25, note:"Protein + carbs + fruit: 1 egg or dairy serving, 1 fist of oats or whole-grain toast, plus some fruit."},
+      {name:"Lunch", pct:0.35, note:"1–1.5 fists of carbs (brown rice, noodles, potatoes), 1.5 palms of protein (lean meat, fish, tofu), 2 fists of veggies."},
+      {name:"Dinner", pct:0.30, note:"Half the carbs (about 0.5–1 fist), 1 palm of protein, 2 fists of veggies. Finish about 3 hours before bed."},
+      {name:"Snack", pct:0.10, note:"A piece of fruit or a small handful of nuts. After a workout, add a glass of milk or yogurt."}
+    ];
+    var html = "";
+    splits.forEach(function(s){
+      html += '<div class="meal"><div class="tag">' + s.name + '</div><div><div class="t">' + Math.round(c.targetCal*s.pct) + ' kcal</div><div class="g">Protein ' + Math.round(c.protein*s.pct) + 'g · Carbs ' + Math.round(c.carb*s.pct) + 'g · Fat ' + Math.round(c.fat*s.pct) + 'g</div><p class="p">' + s.note + '</p></div></div>';
+    });
+    document.getElementById("mealPlan").innerHTML = html;
+  }
+
+  /* ---------- week ---------- */
+  var WEEK = [
+    {dow:"Mon", act:"Strength · Legs", note:"Squats, lunges, glute bridges ×3 sets; rest 60–90 s between sets."},
+    {dow:"Tue", act:"Cardio · Moderate", note:"Brisk walk or jog 30–40 min, or a 30-min swim."},
+    {dow:"Wed", act:"Strength · Upper body + core", note:"Push-ups, rows and planks ×3 sets."},
+    {dow:"Thu", act:"Cardio · Moderate", note:"Cycling or jump rope 30 min — warm up first."},
+    {dow:"Fri", act:"Strength · Full-body circuit", note:"Squats, press, row, crunches ×3 rounds."},
+    {dow:"Sat", act:"Outdoor low-intensity cardio", note:"Hike, cycle or ball games 45–60 min — have fun!"},
+    {dow:"Sun", act:"Rest / Stretch", note:"Full-body stretch 15–20 min and a good night's sleep.", rest:true}
+  ];
+  function renderWeek(){
+    var html = "";
+    WEEK.forEach(function(d){
+      html += '<div class="day' + (d.rest ? " rest":"") + '"><div class="dow">' + d.dow + '</div><div><div class="act">' + d.act + '</div><div class="note">' + d.note + '</div></div></div>';
+    });
+    document.getElementById("weekPlan").innerHTML = html;
+  }
+
+  /* ---------- main render ---------- */
+  function render(plan, c){
+    var html = "";
+    html += '<div class="metric"><span class="mini"><svg width="15" height="15"><use href="#flower" xlink:href="#flower" color="#F2B8C6"/></svg></span><div class="k">BMI</div><div class="v">' + c.bmi.toFixed(1) + '</div><div class="d">' + bmiClass(c.bmi, plan.age) + '</div></div>';
+    html += '<div class="metric"><span class="mini"><svg width="15" height="15"><use href="#star" xlink:href="#star" color="#E9C46A"/></svg></span><div class="k">Basal metabolic rate</div><div class="v">' + c.bmr + '</div><div class="d">kcal / day</div></div>';
+    html += '<div class="metric"><span class="mini"><svg width="15" height="15"><use href="#sparkle" xlink:href="#sparkle" color="#B79CED"/></svg></span><div class="k">Daily burn (TDEE)</div><div class="v">' + c.tdee + '</div><div class="d">kcal / day</div></div>';
+    html += '<div class="metric hot"><span class="mini"><svg width="15" height="15"><use href="#strawberry" xlink:href="#strawberry" color="#F27C7C"/></svg></span><div class="k">Daily calorie goal</div><div class="v">' + c.targetCal + '</div><div class="d">deficit ≈ ' + c.deficit + ' kcal</div></div>';
+    document.getElementById("metrics").innerHTML = html;
+
+    var w = "";
+    c.warns.forEach(function(x){
+      w += '<div class="warn ' + x.type + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="17.5" r="0.7" fill="currentColor"/></svg><span>' + x.text + '</span></div>';
+    });
+    document.getElementById("warns").innerHTML = w;
+
+    var m = "";
+    var macros = [
+      {n:"Protein", cls:"pro", v:c.protein, pct:clampPct(c.protein*4/c.targetCal*100), tip:"Keeps muscles happy and you full — aim for 1.6–2.2 g per kg of body weight"},
+      {n:"Fat", cls:"fat", v:c.fat, pct:clampPct(c.fat*9/c.targetCal*100), tip:"About 25% of calories — fish, nuts, olive oil"},
+      {n:"Carbs", cls:"carb", v:c.carb, pct:clampPct(c.carb*4/c.targetCal*100), tip:"The rest — whole grains, potatoes, fruit and veggies"}
+    ];
+    macros.forEach(function(x){
+      m += '<div class="macro"><div class="row"><span>' + x.n + '</span><b>' + x.v + ' g / day</b></div><div class="bar"><i class="bar-' + x.cls + '" style="width:' + x.pct + '%"></i></div><p class="hint">about ' + x.pct + '% · ' + x.tip + '</p></div>';
+    });
+    m += '<div class="macro-total">Daily total ≈ ' + (c.protein*4 + c.fat*9 + c.carb*4) + ' kcal (' + c.protein + 'g × 4 + ' + c.fat + 'g × 9 + ' + c.carb + 'g × 4) — may differ from the goal by a few kcal due to rounding.</div>';
+    document.getElementById("macros").innerHTML = m;
+
+    renderMeals(c);
+    renderWeek();
+    renderChart(c);
+    renderRecords();
+  }
+
+  /* ---------- records ---------- */
+  function renderRecords(){
+    var el = document.getElementById("records");
+    if (!state.records.length){
+      el.innerHTML = '<div class="empty">No check-ins yet — add this week\'s weight to start your little graph.</div>';
+      return;
+    }
+    var sorted = state.records.slice().sort(function(a,b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+    var html = "";
+    var prev = null;
+    sorted.forEach(function(r){
+      var delta = prev != null ? fmt(r.weight - prev) : null;
+      var dlt = "";
+      if (delta != null){
+        var cls = delta < 0 ? "down" : (delta > 0 ? "up" : "flat");
+        dlt = '<span class="delta ' + cls + '">' + (delta > 0 ? "+" : "") + delta.toFixed(1) + ' kg</span>';
+      }
+      html += '<div class="rec"><span class="date">' + r.date + '</span><span style="display:flex;gap:10px;align-items:center"><span class="wt">' + r.weight.toFixed(1) + ' kg</span>' + dlt + '</span></div>';
+      prev = r.weight;
+    });
+    el.innerHTML = html;
+  }
+
+  function addRecord(){
+    var v = parseFloat(document.getElementById("checkinWt").value);
+    if (!(v >= 30 && v <= 250)){ alert("Please enter a weight between 30 and 250 kg."); return; }
+    var iso = todayISO();
+    // Same date → keep the newest entry only (consistent, no duplicates)
+    state.records = state.records.filter(function(r){ return r.date !== iso; });
+    state.records.push({ date: iso, weight: v });
+    save();
+    document.getElementById("checkinWt").value = "";
+    if (state.profile && window.lastPlan){ renderChart(window.lastPlan); renderRecords(); }
+  }
+  document.getElementById("checkinBtn").addEventListener("click", addRecord);
+  document.getElementById("checkinWt").addEventListener("keydown", function(e){ if (e.key === "Enter") addRecord(); });
+
+  /* ---------- generate ---------- */
+  function readInputs(){
+    return {
+      age: parseFloat(document.getElementById("age").value),
+      height: parseFloat(document.getElementById("height").value),
+      weight: parseFloat(document.getElementById("weight").value),
+      activity: parseFloat(document.getElementById("activity").value),
+      goal: parseFloat(document.getElementById("goal").value),
+      gender: gender
+    };
+  }
+  function validate(inputs){
+    if (!(inputs.age >= 14 && inputs.age <= 90)){ alert("Please enter an age between 14 and 90."); return false; }
+    if (!(inputs.height >= 130 && inputs.height <= 230)){ alert("Please enter a height between 130 and 230 cm."); return false; }
+    if (!(inputs.weight >= 30 && inputs.weight <= 250)){ alert("Please enter a weight between 30 and 250 kg."); return false; }
+    return true;
+  }
+  function isDifferentPerson(inputs){
+    var p = state.profile;
+    if (!p) return false;
+    return p.gender !== inputs.gender || p.height !== inputs.height || p.age !== inputs.age;
+  }
+
+  function generate(){
+    var inputs = readInputs();
+    if (!validate(inputs)) return;
+    var firstPlan = !state.profile;
+    if (isDifferentPerson(inputs) && state.records.length){
+      var ok = confirm("This looks like a different profile (gender, age or height changed). Start a fresh weight history? Your previous check-ins will be cleared. Choose Cancel to keep them.");
+      if (ok){ state.records = []; state.startDate = todayISO(); }
+    }
+    state.profile = inputs;
+    if (!state.startDate) state.startDate = todayISO();
+    save();
+    var c = compute(inputs);
+    window.lastPlan = c;
+    document.getElementById("results").hidden = false;
+    document.getElementById("results").scrollIntoView({ behavior:"smooth", block:"start" });
+    render(inputs, c);
+  }
+  document.getElementById("generateBtn").addEventListener("click", generate);
+
+  /* ---------- reset ---------- */
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    var ok = confirm("Start a brand-new plan? This clears your current profile and all weight history. This can't be undone.");
+    if (!ok) return;
+    state = { profile:null, startDate:null, records:[] };
+    save();
+    localStorage.removeItem(LS_KEY);
+    location.reload();
+  });
+
+  /* ---------- restore ---------- */
+  if (state.profile){
+    gender = state.profile.gender || "male";
+    segBtns.forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-g") === gender); });
+    document.getElementById("age").value = state.profile.age;
+    document.getElementById("height").value = state.profile.height;
+    document.getElementById("weight").value = state.profile.weight;
+    document.getElementById("activity").value = String(state.profile.activity);
+    document.getElementById("goal").value = String(state.profile.goal);
+    document.getElementById("results").hidden = false;
+    var c = compute(state.profile);
+    window.lastPlan = c;
+    render(state.profile, c);
+  }
+
+  window.addEventListener("resize", function(){ if (chart) chart.resize(); });
+})();
+</script>
+</body>
+</html>
